@@ -1,0 +1,12 @@
+Running on local
+--------------------------
+package.json --
+"start": "npm run build & concurrently --kill-others \"npm run serve-api\" \"npm run serve\"",
+
+Running on heroku
+--------------------------
+package.json --
+"start": "node server.js",
+
+add environment variable --
+process.env.MONGODB_URI = "mongodb://sa:sa@ds125479.mlab.com:25479/game-on"
