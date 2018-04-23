@@ -1,11 +1,9 @@
-process.env.MONGODB_URI = "mongodb+srv://sa:Welcome@sandbox-tcuqx.mongodb.net/game-on"
-
 var express = require("express");
 var bodyParser = require("body-parser");
 var mongodb = require("mongodb");
 var ObjectID = mongodb.ObjectID;
 
-var FORM_COLLECTION = "forms";
+var FORM_COLLECTION = "main";
 
 var app = express();
 app.use(bodyParser.json());
@@ -35,27 +33,53 @@ mongodb.MongoClient.connect(process.env.MONGODB_URI || "mongodb://localhost:2701
   });
 });
 
-// forms API ROUTES BELOW
+// API ROUTES BELOW
 
 // Generic error handler used by all endpoints.
 function handleError(res, reason, message, code) {
   console.log("ERROR: " + reason);
-  res.status(code || 500).json({"error": message});
+  res.status(code || 500).json({"success": true, "error": message});
 }
 
-/*  "/api/forms"
- *    GET: finds all forms
- *    POST: creates a new contact
+// Generic response used by all endpoints.
+var handleResponse = function(res, data, message) {
+  res.status(200).json({
+    "success": true,
+    "data": data,
+    "message": message
+  });
+}
+
+/*  "/api/:type/:id?"
+ *    GET: finds all documents form the requested type and/or id 
+ *    POST: creates a new document for the given type
  */
 
-app.get("/api/forms", function(req, res) {
-  db.collection(FORM_COLLECTION).find({}).toArray(function(err, docs) {
-    if (err) {
-      handleError(res, err.message, "Failed to get forms.");
-    } else {
-      res.status(200).json(docs);
+app.get("/api/:type/:id?", function(req, res) {
+  var type = req.params.type;
+  var id = req.params.id;
+  if (id) {
+    try {
+      var objID = new ObjectID(id);
+      db.collection(FORM_COLLECTION).findOne({ _id: objID, "type": type }, function(err, data) {
+        if (err) {
+          return handleError(res, err.message, "Failed to get /" + type + "/" + id); return;
+        } else {
+          handleResponse(res, data);
+        }
+      });
+    } catch (ex) {
+      handleError(res, ex.message, "invalid parameter"); return;
     }
-  });
+  } else {
+    db.collection(FORM_COLLECTION).find({ "type": type }).toArray(function(err, data) {
+      if (err) {
+        return handleError(res, err.message, "Failed to get /" + type ); return;
+      } else {
+        handleResponse(res, data);
+      }
+    });
+  }
 });
 
 app.post("/api/forms", function(req, res) {
