@@ -1,5 +1,3 @@
-process.env.MONGODB_URI = "mongodb+srv://sa:Welcome@sandbox-tcuqx.mongodb.net/game-on"
-
 var express = require("express");
 var bodyParser = require("body-parser");
 var mongodb = require("mongodb");
