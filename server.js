@@ -38,11 +38,11 @@ mongodb.MongoClient.connect(process.env.MONGODB_URI || "mongodb://localhost:2701
 // Generic error handler used by all endpoints.
 function handleError(res, reason, message, code) {
   console.log("ERROR: " + reason);
-  res.status(code || 500).json({"success": true, "error": message});
+  res.status(code || 500).json({ "success": true, "error": message });
 }
 
 // Generic response used by all endpoints.
-var handleResponse = function(res, data, message) {
+var handleResponse = function (res, data, message) {
   res.status(200).json({
     "success": true,
     "data": data,
@@ -50,18 +50,28 @@ var handleResponse = function(res, data, message) {
   });
 }
 
+app.get("/api/types", function (req, res) {
+  db.collection(FORM_COLLECTION).distinct('type', function (err, data) {
+    if (err) {
+      return handleError(res, err.message, "Failed to get /" + type); return;
+    } else {
+      handleResponse(res, data);
+    }
+  });
+});
+
 /*  "/api/:type/:id?"
  *    GET: finds all documents form the requested type and/or id 
  *    POST: creates a new document for the given type
  */
 
-app.get("/api/:type/:id?", function(req, res) {
+app.get("/api/:type/:id?", function (req, res) {
   var type = req.params.type;
   var id = req.params.id;
   if (id) {
     try {
       var objID = new ObjectID(id);
-      db.collection(FORM_COLLECTION).findOne({ _id: objID, "type": type }, function(err, data) {
+      db.collection(FORM_COLLECTION).findOne({ _id: objID, "type": type }, function (err, data) {
         if (err) {
           return handleError(res, err.message, "Failed to get /" + type + "/" + id); return;
         } else {
@@ -72,9 +82,9 @@ app.get("/api/:type/:id?", function(req, res) {
       handleError(res, ex.message, "invalid parameter"); return;
     }
   } else {
-    db.collection(FORM_COLLECTION).find({ "type": type }).toArray(function(err, data) {
+    db.collection(FORM_COLLECTION).find({ "type": type }).toArray(function (err, data) {
       if (err) {
-        return handleError(res, err.message, "Failed to get /" + type ); return;
+        return handleError(res, err.message, "Failed to get /" + type); return;
       } else {
         handleResponse(res, data);
       }
@@ -82,7 +92,7 @@ app.get("/api/:type/:id?", function(req, res) {
   }
 });
 
-app.post("/api/forms", function(req, res) {
+app.post("/api/forms", function (req, res) {
   var newContact = req.body;
   newContact.createDate = new Date();
 
@@ -90,7 +100,7 @@ app.post("/api/forms", function(req, res) {
     handleError(res, "Invalid user input", "Must provide a name.", 400);
   }
 
-  db.collection(FORM_COLLECTION).insertOne(newContact, function(err, doc) {
+  db.collection(FORM_COLLECTION).insertOne(newContact, function (err, doc) {
     if (err) {
       handleError(res, err.message, "Failed to create new contact.");
     } else {
@@ -105,8 +115,8 @@ app.post("/api/forms", function(req, res) {
  *    DELETE: deletes contact by id
  */
 
-app.get("/api/forms/:id", function(req, res) {
-  db.collection(FORM_COLLECTION).findOne({ _id: new ObjectID(req.params.id) }, function(err, doc) {
+app.get("/api/forms/:id", function (req, res) {
+  db.collection(FORM_COLLECTION).findOne({ _id: new ObjectID(req.params.id) }, function (err, doc) {
     if (err) {
       handleError(res, err.message, "Failed to get contact");
     } else {
@@ -115,11 +125,11 @@ app.get("/api/forms/:id", function(req, res) {
   });
 });
 
-app.put("/api/forms/:id", function(req, res) {
+app.put("/api/forms/:id", function (req, res) {
   var updateDoc = req.body;
   delete updateDoc._id;
 
-  db.collection(FORM_COLLECTION).updateOne({_id: new ObjectID(req.params.id)}, updateDoc, function(err, doc) {
+  db.collection(FORM_COLLECTION).updateOne({ _id: new ObjectID(req.params.id) }, updateDoc, function (err, doc) {
     if (err) {
       handleError(res, err.message, "Failed to update contact");
     } else {
@@ -129,8 +139,8 @@ app.put("/api/forms/:id", function(req, res) {
   });
 });
 
-app.delete("/api/forms/:id", function(req, res) {
-  db.collection(FORM_COLLECTION).deleteOne({_id: new ObjectID(req.params.id)}, function(err, result) {
+app.delete("/api/forms/:id", function (req, res) {
+  db.collection(FORM_COLLECTION).deleteOne({ _id: new ObjectID(req.params.id) }, function (err, result) {
     if (err) {
       handleError(res, err.message, "Failed to delete contact");
     } else {
