@@ -1,20 +1,43 @@
 var express = require("express");
 var bodyParser = require("body-parser");
+var morgan = require('morgan')
+var router = require("./routes/route");
+
 var mongodb = require("mongodb");
 var ObjectID = mongodb.ObjectID;
-
 var FORM_COLLECTION = "main";
 
-var app = express();
-app.use(bodyParser.json());
+require("./config/db");
 
-// Create link to Angular build directory
-var distDir = __dirname + "/dist/";
-app.use(express.static(distDir));
+var app = express();
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.use(morgan(':method :url :response-time'))  // Log to console
+app.use(express.static(__dirname + "/dist/"));  // Create link to Angular build directory
+app.use('/api/v1.0/', router);
+
+/********* Setup routing **********/
+/*
+var router = express.Router();
+router.use(function (req, res, next) {
+  console.log('Time: ', Date.now());
+  next();
+})
+
+router.get("/types", function (req, res) {
+  db.collection(FORM_COLLECTION).distinct('type', function (err, data) {
+    if (err) {
+      return handleError(res, err.message, "Failed to get types"); return;
+    } else {
+      handleResponse(res, data);
+    }
+  });
+});
+*/
+
 
 // Create a database variable outside of the database connection callback to reuse the connection pool in your app.
 var db;
-
 // Connect to the database before starting the application server.
 mongodb.MongoClient.connect(process.env.MONGODB_URI || "mongodb://localhost:27017/game-on", function (err, client) {
   if (err) {
@@ -49,21 +72,17 @@ var handleResponse = function (res, data, message) {
     "message": message
   });
 }
-
+/*
 app.get("/api/types", function (req, res) {
   db.collection(FORM_COLLECTION).distinct('type', function (err, data) {
     if (err) {
-      return handleError(res, err.message, "Failed to get /" + type); return;
+      return handleError(res, err.message, "Failed to get types"); return;
     } else {
       handleResponse(res, data);
     }
   });
 });
 
-/*  "/api/:type/:id?"
- *    GET: finds all documents form the requested type and/or id 
- *    POST: creates a new document for the given type
- */
 
 app.get("/api/:type/:id?", function (req, res) {
   var type = req.params.type;
@@ -109,12 +128,6 @@ app.post("/api/forms", function (req, res) {
   });
 });
 
-/*  "/api/forms/:id"
- *    GET: find contact by id
- *    PUT: update contact by id
- *    DELETE: deletes contact by id
- */
-
 app.get("/api/forms/:id", function (req, res) {
   db.collection(FORM_COLLECTION).findOne({ _id: new ObjectID(req.params.id) }, function (err, doc) {
     if (err) {
@@ -148,3 +161,5 @@ app.delete("/api/forms/:id", function (req, res) {
     }
   });
 });
+
+*/
